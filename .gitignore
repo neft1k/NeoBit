@@ -1,0 +1,14 @@
+bin/
+*.exe
+*.out
+*.test
+build/
+dist/
+coverage/
+*.cover
+*.log
+.env
+.idea/
+.vscode/
+.DS_Store
+*.csv

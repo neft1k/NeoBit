@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  db:
+    image: pgvector/pgvector:0.7.4-pg16
+    container_name: neobit-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-neobit}
+      POSTGRES_USER: ${POSTGRES_USER:-neobit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neobit}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - neobit_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-neobit} -d ${POSTGRES_DB:-neobit}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: neobit-app
+    environment:
+      PORT: ${PORT:-8080}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-neobit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neobit}
+      POSTGRES_DB: ${POSTGRES_DB:-neobit}
+      POSTGRES_SSLMODE: disable
+    ports:
+      - "${PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  neobit_pgdata:
