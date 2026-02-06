@@ -6,6 +6,7 @@ import (
 
 	"NeoBIT/internal/config"
 	"NeoBIT/internal/logger"
+	"NeoBIT/internal/metrics"
 	"NeoBIT/internal/models/cluster"
 )
 
@@ -98,4 +99,18 @@ func (s *ClusterService) processBatch(ctx context.Context) {
 		}
 	}
 	s.log.Info(ctx, "cluster worker: updated docs", logger.FieldAny("docs", len(points)), logger.FieldAny("clusters", len(clusterIDs)))
+
+	minSize, maxSize, avgSize, err := s.clusterRepo.SizeStats(ctx)
+	if err != nil {
+		s.log.Error(ctx, "cluster worker: size stats failed", logger.FieldAny("error", err))
+	} else {
+		metrics.SetClusterSizeStats(minSize, maxSize, avgSize)
+	}
+
+	pct, err := s.docRepo.PctClustered(ctx)
+	if err != nil {
+		s.log.Error(ctx, "cluster worker: pct clustered failed", logger.FieldAny("error", err))
+	} else {
+		metrics.SetPctClustered(pct)
+	}
 }

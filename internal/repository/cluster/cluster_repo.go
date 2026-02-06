@@ -97,3 +97,34 @@ func (r *ClusterRepo) List(ctx context.Context, limit, offset int) ([]cluster.Cl
 	}
 	return out, nil
 }
+
+func (r *ClusterRepo) SizeStats(ctx context.Context) (min float64, max float64, avg float64, err error) {
+	if r.pool == nil {
+		return 0, 0, 0, fmt.Errorf("cluster repo: pool is nil")
+	}
+
+	sub := sq.
+		Select("COUNT(*) AS size").
+		From("documents").
+		Where("cluster_id IS NOT NULL").
+		GroupBy("cluster_id")
+
+	query, args, err := sq.
+		Select(
+			"COALESCE(MIN(size), 0)::float8 AS min",
+			"COALESCE(MAX(size), 0)::float8 AS max",
+			"COALESCE(AVG(size), 0)::float8 AS avg",
+		).
+		FromSelect(sub, "s").
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("cluster repo: build size stats: %w", err)
+	}
+
+	row := r.pool.QueryRow(ctx, query, args...)
+	if err := row.Scan(&min, &max, &avg); err != nil {
+		return 0, 0, 0, fmt.Errorf("cluster repo: size stats: %w", err)
+	}
+	return min, max, avg, nil
+}

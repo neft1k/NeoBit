@@ -10,13 +10,14 @@ import (
 	"NeoBIT/internal/config"
 	"NeoBIT/internal/db"
 	"NeoBIT/internal/logger"
+	"NeoBIT/internal/metrics"
 	clusterrepo "NeoBIT/internal/repository/cluster"
 	documentrepo "NeoBIT/internal/repository/document"
 	clusterservice "NeoBIT/internal/service/cluster"
 	documentservice "NeoBIT/internal/service/document"
 	clusterhandler "NeoBIT/internal/transport/http/handler/cluster"
 	documenthandler "NeoBIT/internal/transport/http/handler/document"
-
+	httpmiddleware "NeoBIT/internal/transport/http/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -46,7 +47,10 @@ func Start(cfg config.Config, log logger.Logger) error {
 	workerDone := clusterservice.StartWorker(ctx, clusterSvc)
 
 	r := chi.NewRouter()
-
+	metrics.NewRegistry()
+	r.Use(httpmiddleware.Metrics())
+	r.Use(httpmiddleware.RateLimiter(100, 50, log))
+	r.Use(httpmiddleware.HTTPLogger(log))
 	r.Route("/documents", func(r chi.Router) {
 		r.Post("/", docHandler.Create)
 		r.Get("/{id}", docHandler.GetByID)
@@ -56,6 +60,7 @@ func Start(cfg config.Config, log logger.Logger) error {
 		r.Get("/", clusterHandler.List)
 		r.Get("/{id}/documents", docHandler.ListByCluster)
 	})
+	r.Handle("/metrics", metrics.Handler())
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,

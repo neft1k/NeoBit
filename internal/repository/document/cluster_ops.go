@@ -102,3 +102,25 @@ func (r *DocumentRepo) UpdateClusterIDs(ctx context.Context, ids []int64, cluste
 	}
 	return nil
 }
+
+func (r *DocumentRepo) PctClustered(ctx context.Context) (float64, error) {
+	if r.pool == nil {
+		return 0, fmt.Errorf("document repo: pool is nil")
+	}
+
+	var pct float64
+	query, args, err := sq.
+		Select("COALESCE(100.0 * COUNT(*) FILTER (WHERE cluster_id IS NOT NULL) / NULLIF(COUNT(*), 0), 0) AS pct").
+		From("documents").
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("document repo: build pct clustered: %w", err)
+	}
+
+	err = r.pool.QueryRow(ctx, query, args...).Scan(&pct)
+	if err != nil {
+		return 0, fmt.Errorf("document repo: pct clustered: %w", err)
+	}
+	return pct, nil
+}
