@@ -1,8 +1,9 @@
 package cluster
 
 import (
-	"NeoBIT/internal/models/cluster"
 	"context"
+
+	"NeoBIT/internal/models/cluster"
 )
 
 type Service interface {

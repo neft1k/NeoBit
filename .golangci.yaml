@@ -1,0 +1,51 @@
+version: "2"
+run:
+  issues-exit-code: 1
+  tests: true
+issues:
+  max-same-issues: 0
+output:
+  formats:
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
+linters:
+  default: none
+  enable:
+    - govet
+    - errcheck
+    - ineffassign
+    - makezero
+    - staticcheck
+    - asciicheck
+    - unused
+    - bodyclose
+    - unparam
+  settings:
+    staticcheck:
+      checks:
+        - all
+        - -ST1000
+  exclusions:
+    generated: lax
+    paths:
+      - migrations
+      - docs
+      - third_party$
+formatters:
+  enable:
+    - gci
+  settings:
+    gci:
+      custom-order: true
+      sections:
+        - standard
+        - default
+        - prefix(github.com/neft1k/NeoBit)
+  exclusions:
+    generated: lax
+    paths:
+      - migrations
+      - docs
+      - third_party$

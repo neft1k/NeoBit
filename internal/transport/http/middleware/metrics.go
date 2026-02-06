@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"NeoBIT/internal/metrics"
 	"net/http"
 	"time"
+
+	"NeoBIT/internal/metrics"
 )
 
 func Metrics() func(http.Handler) http.Handler {

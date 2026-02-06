@@ -1,10 +1,10 @@
 package document
 
 import (
-	"NeoBIT/internal/models/document"
 	"context"
 	"fmt"
 
+	"NeoBIT/internal/models/document"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/pgvector/pgvector-go"
 )

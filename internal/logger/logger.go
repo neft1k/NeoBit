@@ -1,10 +1,10 @@
 package logger
 
 import (
-	"NeoBIT/internal/config"
 	"context"
 	"fmt"
 
+	"NeoBIT/internal/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

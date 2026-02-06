@@ -6,7 +6,6 @@ import (
 
 	"NeoBIT/internal/logger"
 	"NeoBIT/internal/models/document"
-
 	"github.com/go-chi/chi/v5"
 )
 
@@ -28,18 +27,5 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func toDocumentResponse(doc document.Document) document.DocumentResponse {
-	return document.DocumentResponse{
-		ID:        doc.ID,
-		HNID:      doc.HNID,
-		Title:     doc.Title,
-		URL:       doc.URL,
-		By:        doc.By,
-		Score:     doc.Score,
-		Time:      doc.Time,
-		Text:      doc.Text,
-		Embedding: doc.Embedding,
-		ClusterID: doc.ClusterID,
-		CreatedAt: doc.CreatedAt,
-		UpdatedAt: doc.UpdatedAt,
-	}
+	return document.DocumentResponse(doc)
 }

@@ -1,8 +1,9 @@
 package document
 
 import (
-	"NeoBIT/internal/models/document"
 	"context"
+
+	"NeoBIT/internal/models/document"
 )
 
 type Repository interface {

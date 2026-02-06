@@ -1,9 +1,10 @@
 package cluster
 
 import (
+	"context"
+
 	"NeoBIT/internal/models/cluster"
 	"NeoBIT/internal/models/document"
-	"context"
 )
 
 type ClusterRepository interface {

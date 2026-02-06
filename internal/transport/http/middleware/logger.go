@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"NeoBIT/internal/logger"
 	"net/http"
 	"time"
+
+	"NeoBIT/internal/logger"
 )
 
 type responseRecorder struct {

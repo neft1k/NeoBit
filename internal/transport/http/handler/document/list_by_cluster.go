@@ -6,7 +6,6 @@ import (
 
 	"NeoBIT/internal/logger"
 	"NeoBIT/internal/models/document"
-
 	"github.com/go-chi/chi/v5"
 )
 

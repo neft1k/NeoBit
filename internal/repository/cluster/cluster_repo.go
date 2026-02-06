@@ -6,7 +6,6 @@ import (
 
 	"NeoBIT/internal/logger"
 	"NeoBIT/internal/models/cluster"
-
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pgvector/pgvector-go"

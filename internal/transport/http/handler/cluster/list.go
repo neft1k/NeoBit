@@ -21,15 +21,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 func toClusterResponses(clusters []cluster_model.Cluster) []cluster_model.ClusterResponse {
 	out := make([]cluster_model.ClusterResponse, 0, len(clusters))
 	for _, cluster := range clusters {
-		out = append(out, cluster_model.ClusterResponse{
-			ID:        cluster.ID,
-			Algorithm: cluster.Algorithm,
-			K:         cluster.K,
-			Centroid:  cluster.Centroid,
-			Size:      cluster.Size,
-			CreatedAt: cluster.CreatedAt,
-			UpdatedAt: cluster.UpdatedAt,
-		})
+		out = append(out, cluster_model.ClusterResponse(cluster))
 	}
 	return out
 }
