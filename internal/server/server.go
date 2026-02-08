@@ -15,6 +15,7 @@ import (
 	documentrepo "NeoBIT/internal/repository/document"
 	clusterservice "NeoBIT/internal/service/cluster"
 	documentservice "NeoBIT/internal/service/document"
+	importservice "NeoBIT/internal/service/importer"
 	clusterhandler "NeoBIT/internal/transport/http/handler/cluster"
 	documenthandler "NeoBIT/internal/transport/http/handler/document"
 	httpmiddleware "NeoBIT/internal/transport/http/middleware"
@@ -44,7 +45,9 @@ func Start(cfg config.Config, log logger.Logger) error {
 	clusterSvc := clusterservice.NewService(clusterRepo, docRepo, config.DefaultClusterConfig(), log)
 	clusterHandler := clusterhandler.NewHandler(clusterSvc, log)
 
-	workerDone := clusterservice.StartWorker(ctx, clusterSvc)
+	importSvc := importservice.NewService(docRepo, config.GetImportConfig(), log)
+	importWorkerDone := importservice.StartWorker(ctx, importSvc)
+	clusterWorkerDone := clusterservice.StartWorker(ctx, clusterSvc)
 
 	r := chi.NewRouter()
 	metrics.NewRegistry()
@@ -82,8 +85,11 @@ func Start(cfg config.Config, log logger.Logger) error {
 
 	workersStopped := make(chan struct{})
 	go func() {
-		if workerDone != nil {
-			<-workerDone
+		if importWorkerDone != nil {
+			<-importWorkerDone
+		}
+		if clusterWorkerDone != nil {
+			<-clusterWorkerDone
 		}
 		close(workersStopped)
 	}()

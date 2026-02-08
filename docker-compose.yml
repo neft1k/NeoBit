@@ -18,6 +18,25 @@ services:
       timeout: 5s
       retries: 10
 
+  dataset:
+    image: duckdb/duckdb:latest
+    container_name: neobit-dataset
+    restart: "no"
+    entrypoint: ["duckdb"]
+    volumes:
+      - neobit_dataset:/data
+    command:
+      - -c
+      - >
+        SET threads=1;
+        SET memory_limit='1GB';
+        SET preserve_insertion_order=false;
+        COPY (
+          SELECT doc_id, title, "by", post_score, CAST(epoch(time) AS BIGINT) AS time_unix, text, vector
+          FROM read_parquet('https://clickhouse-datasets.s3.amazonaws.com/hackernews-miniLM/hackernews_part_1_of_1.parquet')
+          LIMIT 200000
+        ) TO '/data/hn_200k.csv' (HEADER, DELIMITER ',', OVERWRITE_OR_IGNORE true);
+
   app:
     build: .
     container_name: neobit-app
@@ -29,11 +48,23 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neobit}
       POSTGRES_DB: ${POSTGRES_DB:-neobit}
       POSTGRES_SSLMODE: disable
+      IMPORT_ENABLED: ${IMPORT_ENABLED:-false}
+      IMPORT_DATASET_URL: ${IMPORT_DATASET_URL:-https://clickhouse-datasets.s3.amazonaws.com/hackernews-miniLM/hackernews_part_1_of_1.parquet}
+      IMPORT_LOCAL_PATH: ${IMPORT_LOCAL_PATH:-/data/hn_200k.csv}
+      IMPORT_LIMIT: ${IMPORT_LIMIT:-200000}
+      IMPORT_READ_BATCH_SIZE: ${IMPORT_READ_BATCH_SIZE:-1000}
+      IMPORT_WRITE_BATCH_SIZE: ${IMPORT_WRITE_BATCH_SIZE:-500}
+      IMPORT_SHUTDOWN_TIMEOUT_SEC: ${IMPORT_SHUTDOWN_TIMEOUT_SEC:-30}
+      IMPORT_SKIP_IF_DOCS_EXIST: ${IMPORT_SKIP_IF_DOCS_EXIST:-true}
     ports:
       - "${PORT:-8080}:8080"
     depends_on:
       db:
         condition: service_healthy
+      dataset:
+        condition: service_completed_successfully
+    volumes:
+      - neobit_dataset:/data
 
   prometheus:
     image: prom/prometheus:v2.54.1
@@ -48,3 +79,4 @@ services:
 
 volumes:
   neobit_pgdata:
+  neobit_dataset:
