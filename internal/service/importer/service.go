@@ -107,7 +107,7 @@ func (s *ImportService) importFromParquet(ctx context.Context, path string) (ins
 	if err != nil {
 		return 0, 0, fmt.Errorf("import service: open parquet file: %w", err)
 	}
-	defer fileReader.Close()
+	defer s.closeAndLog(ctx, "parquet file", fileReader)
 
 	parquetReader, err := reader.NewParquetReader(fileReader, new(datasetRow), 1)
 	if err != nil {
@@ -192,7 +192,7 @@ func (s *ImportService) importFromCSV(ctx context.Context, path string) (inserte
 	if err != nil {
 		return 0, 0, fmt.Errorf("import service: open csv file: %w", err)
 	}
-	defer file.Close()
+	defer s.closeAndLog(ctx, "csv file", file)
 
 	r := csv.NewReader(bufio.NewReader(file))
 	r.FieldsPerRecord = -1
@@ -419,7 +419,7 @@ func (s *ImportService) prepareDatasetFile(ctx context.Context) (string, error) 
 	if err != nil {
 		return "", fmt.Errorf("import service: download dataset: %w", err)
 	}
-	defer resp.Body.Close()
+	defer s.closeAndLog(ctx, "dataset response body", resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("import service: bad response status: %d", resp.StatusCode)
@@ -429,7 +429,7 @@ func (s *ImportService) prepareDatasetFile(ctx context.Context) (string, error) 
 	if err != nil {
 		return "", fmt.Errorf("import service: create local dataset file: %w", err)
 	}
-	defer file.Close()
+	defer s.closeAndLog(ctx, "dataset file", file)
 
 	written, err := io.Copy(file, resp.Body)
 	if err != nil {
@@ -479,4 +479,15 @@ func isUndefinedTableError(err error) bool {
 		return true
 	}
 	return strings.Contains(err.Error(), `relation "documents" does not exist`)
+}
+
+func (s *ImportService) closeAndLog(ctx context.Context, resource string, c io.Closer) {
+	if err := c.Close(); err != nil {
+		s.log.Warn(
+			ctx,
+			"import service: close failed",
+			logger.FieldAny("resource", resource),
+			logger.FieldAny("error", err),
+		)
+	}
 }

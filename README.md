@@ -176,7 +176,7 @@ make migrate-status
 # Тесты
 go test ./...
 
-# Линтер (если установлен)
+# Линтер
 golangci-lint run ./...
 ```
 
